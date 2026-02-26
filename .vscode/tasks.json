@@ -1,0 +1,20 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Git Init",
+			"type": "shell",
+			"command": "git init"
+		},
+		{
+			"label": "Git Init and Push",
+			"type": "shell",
+			"command": "git init && git add README.md && git commit -m \"Initial commit: hardened Al_Aqsa_HRM_V3 baseline\" && git branch -M main && git remote add origin https://github.com/MuradulAzim/Al_Aqsa_HRM_V3.git && git push -u origin main"
+		},
+		{
+			"label": "step1-git-init",
+			"type": "shell",
+			"command": "git init"
+		}
+	]
+}

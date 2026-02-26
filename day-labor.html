@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day Labor Tracking - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/pagination-utils.js"></script>
+    <script src="js/group-utils.js"></script>
+    <script src="js/employee-lookup.js"></script>
+    <script src="js/client-lookup.js"></script>
+    <script src="js/day-labor.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Al-Aqsa Security Services</h1>
+                <span class="text-sm text-gray-500">Day Labor Tracking</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userInfo" class="text-sm text-gray-600"></span>
+                <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 text-sm">Dashboard</a>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Date Navigation -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <button 
+                        onclick="navigateDate('previous')"
+                        class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        ← Previous
+                    </button>
+                    <button 
+                        onclick="navigateDate('today')"
+                        class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        Today
+                    </button>
+                    <button 
+                        onclick="navigateDate('next')"
+                        class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        Next →
+                    </button>
+                </div>
+                <div class="text-lg font-semibold text-gray-800">
+                    <span id="currentDateDisplay"></span>
+                </div>
+                <button 
+                    onclick="refreshDayLabor(currentDate)"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                >
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Total Records</div>
+                <div id="summaryTotalRecords" class="text-2xl font-bold text-gray-800">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Total Hours</div>
+                <div id="summaryTotalHours" class="text-2xl font-bold text-blue-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Total Amount</div>
+                <div id="summaryTotalAmount" class="text-2xl font-bold text-green-600">0</div>
+            </div>
+        </div>
+
+        <!-- Labor Records Table -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-lg font-semibold text-gray-800">Labor Records</h2>
+                    <span class="text-sm font-medium text-gray-600">View:</span>
+                    <button id="laborFlatBtn" onclick="setLaborViewMode('flat')" class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 text-white transition-colors">Flat</button>
+                    <button id="laborGroupedBtn" onclick="setLaborViewMode('grouped')" class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Grouped</button>
+                    <button id="laborExpandAllBtn" onclick="toggleAllGroups('laborTableBody', true)" class="px-3 py-1.5 text-xs rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors hidden">Expand All</button>
+                    <button id="laborCollapseAllBtn" onclick="toggleAllGroups('laborTableBody', false)" class="px-3 py-1.5 text-xs rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors hidden">Collapse All</button>
+                </div>
+                <button 
+                    onclick="openAddLaborModal()"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                    + Add Labor
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Sl No.</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Employee</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Client</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Date</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Shift</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Hours</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Rate</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Amount</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Notes</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="laborTableBody">
+                        <tr>
+                            <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+                                Click "Refresh" to load labor records
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div id="laborPagination" class="mt-4"></div>
+        </div>
+
+    </main>
+
+    <!-- Add Labor Modal -->
+    <div id="laborFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg max-w-lg w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Add Labor Record</h3>
+                <button onclick="closeLaborModal()" class="text-gray-500 hover:text-gray-700" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="laborForm" onsubmit="handleSubmit(event)" class="px-6 py-4">
+                <div class="space-y-4">
+                    
+                    <!-- Employee ID (hidden/optional) -->
+                    <input type="hidden" id="employeeId" name="employeeId">
+                    
+                    <!-- Client ID (hidden/optional) -->
+                    <input type="hidden" id="clientId" name="clientId">
+
+                    <!-- Employee Name -->
+                    <div>
+                        <label for="employeeName" class="block text-sm font-medium text-gray-700 mb-1">Employee Name *</label>
+                        <input 
+                            type="text" 
+                            id="employeeName" 
+                            name="employeeName"
+                            required
+                            autocomplete="off"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Type to search employees..."
+                        >
+                    </div>
+
+                    <!-- Client Name -->
+                    <div>
+                        <label for="clientName" class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                        <select 
+                            id="clientName" 
+                            name="clientName"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        ></select>
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                        <input 
+                            type="date" 
+                            id="date" 
+                            name="date"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                    </div>
+
+                    <!-- Shift -->
+                    <div>
+                        <label for="shift" class="block text-sm font-medium text-gray-700 mb-1">Shift *</label>
+                        <select 
+                            id="shift" 
+                            name="shift"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                            <option value="Day">Day</option>
+                            <option value="Night">Night</option>
+                        </select>
+                    </div>
+
+                    <!-- Hours Worked -->
+                    <div>
+                        <label for="hoursWorked" class="block text-sm font-medium text-gray-700 mb-1">Hours Worked *</label>
+                        <input 
+                            type="number" 
+                            id="hoursWorked" 
+                            name="hoursWorked"
+                            required
+                            min="0"
+                            step="0.5"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Hours worked"
+                        >
+                    </div>
+
+                    <!-- Rate -->
+                    <div>
+                        <label for="rate" class="block text-sm font-medium text-gray-700 mb-1">Rate *</label>
+                        <input 
+                            type="number" 
+                            id="rate" 
+                            name="rate"
+                            required
+                            min="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Rate per hour"
+                        >
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea 
+                            id="notes" 
+                            name="notes"
+                            rows="2"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Additional notes"
+                        ></textarea>
+                    </div>
+
+                </div>
+
+                <!-- Form Actions -->
+                <div class="mt-6 flex gap-3 justify-end">
+                    <button 
+                        type="button"
+                        onclick="closeLaborModal()"
+                        class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        Save Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize date display on page load (safe access)
+        document.getElementById('currentDateDisplay').textContent = (window.currentDate || '');
+    </script>
+</body>
+</html>

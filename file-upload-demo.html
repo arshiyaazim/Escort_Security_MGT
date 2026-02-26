@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Demo - Al-Aqsa HRM</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-6 max-w-4xl">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">File Upload System Demo</h1>
+                <p class="text-gray-600 text-sm">Test the reusable file upload infrastructure</p>
+            </div>
+            <a href="dashboard.html" class="text-blue-600 hover:underline text-sm">← Back to Dashboard</a>
+        </div>
+
+        <!-- Configuration Card -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Upload Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1" for="moduleSelect">Module</label>
+                    <select id="moduleSelect" class="w-full border rounded p-2" title="Select module for file upload">
+                        <option value="Employee">Employee</option>
+                        <option value="EscortDuty">Escort Duty</option>
+                        <option value="GuardDuty">Guard Duty</option>
+                        <option value="JobApplication">Job Application</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1" for="recordIdInput">Record ID</label>
+                    <input type="text" id="recordIdInput" value="demo-record-001" 
+                        class="w-full border rounded p-2" 
+                        placeholder="Enter record ID"
+                        title="Record ID to associate file with">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1" for="typeSelect">File Type</label>
+                    <select id="typeSelect" class="w-full border rounded p-2" title="Select allowed file types">
+                        <option value="all">All Types</option>
+                        <option value="image">Images Only</option>
+                        <option value="document">Documents Only</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="initUploadComponent()" 
+                class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Initialize Upload Component
+            </button>
+        </div>
+
+        <!-- Upload Component Container -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Upload Component</h2>
+            <div id="uploadContainer">
+                <p class="text-gray-500 text-center py-4">Click "Initialize Upload Component" to activate</p>
+            </div>
+        </div>
+
+        <!-- File List Container -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Uploaded Files</h2>
+                <button onclick="refreshFileList()" 
+                    class="text-blue-600 hover:underline text-sm">
+                    Refresh List
+                </button>
+            </div>
+            <div id="fileListContainer">
+                <p class="text-gray-500 text-center py-4">No files to display</p>
+            </div>
+        </div>
+
+        <!-- All Files (Debug View) -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">All Files (Debug View)</h2>
+                <button onclick="refreshAllFiles()" 
+                    class="text-blue-600 hover:underline text-sm">
+                    Refresh All
+                </button>
+            </div>
+            <div id="allFilesContainer">
+                <p class="text-gray-500 text-center py-4">Click "Refresh All" to load</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/file-upload.js"></script>
+    <script>
+        // Current configuration
+        let currentConfig = {
+            module: 'Employee',
+            recordId: 'demo-record-001',
+            typeCategory: 'all'
+        };
+        let currentComponentId = null;
+
+        /**
+         * Initialize the upload component with current configuration
+         */
+        function initUploadComponent() {
+            currentConfig.module = document.getElementById('moduleSelect').value;
+            currentConfig.recordId = document.getElementById('recordIdInput').value.trim();
+            currentConfig.typeCategory = document.getElementById('typeSelect').value;
+
+            if (!currentConfig.recordId) {
+                alert('Please enter a Record ID');
+                return;
+            }
+
+            // Create upload component
+            currentComponentId = createUploadComponent({
+                containerId: 'uploadContainer',
+                module: currentConfig.module,
+                recordId: currentConfig.recordId,
+                typeCategory: currentConfig.typeCategory,
+                multiple: false,
+                onUploadComplete: (fileData) => {
+                    console.log('Upload complete:', fileData);
+                    refreshFileList();
+                }
+            });
+
+            // Enable drag & drop
+            if (currentComponentId) {
+                enableDragDrop(currentComponentId, currentConfig);
+            }
+
+            // Refresh file list for this record
+            refreshFileList();
+        }
+
+        /**
+         * Refresh file list for current module/record
+         */
+        async function refreshFileList() {
+            const files = await getFiles(currentConfig.module, currentConfig.recordId);
+            
+            createFileListComponent({
+                containerId: 'fileListContainer',
+                files: files.data || [],
+                showDelete: true,
+                onDelete: (fileId) => {
+                    console.log('File deleted:', fileId);
+                    refreshFileList();
+                }
+            });
+        }
+
+        /**
+         * Refresh all files (debug view)
+         */
+        async function refreshAllFiles() {
+            const files = await getFiles();  // No filters = get all
+            const container = document.getElementById('allFilesContainer');
+
+            if (!files.data || files.data.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No files in system</p>';
+                return;
+            }
+
+            // Group by module
+            const byModule = {};
+            files.data.forEach(file => {
+                if (!byModule[file.module]) {
+                    byModule[file.module] = [];
+                }
+                byModule[file.module].push(file);
+            });
+
+            let html = '<div class="space-y-4">';
+            for (const [module, moduleFiles] of Object.entries(byModule)) {
+                html += `
+                    <div class="border rounded-lg p-3">
+                        <h3 class="font-medium text-gray-700 mb-2">${module} (${moduleFiles.length} files)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-gray-500 border-b">
+                                        <th class="py-1 px-2">File Name</th>
+                                        <th class="py-1 px-2">Record ID</th>
+                                        <th class="py-1 px-2">Size</th>
+                                        <th class="py-1 px-2">Uploaded</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${moduleFiles.map(f => `
+                                        <tr class="border-b border-gray-100">
+                                            <td class="py-1 px-2">
+                                                <a href="${f.driveUrl}" target="_blank" class="text-blue-600 hover:underline">
+                                                    ${escapeHtmlForUpload(f.fileName)}
+                                                </a>
+                                            </td>
+                                            <td class="py-1 px-2 text-gray-600">${f.recordId}</td>
+                                            <td class="py-1 px-2 text-gray-600">${formatFileSize(f.fileSize)}</td>
+                                            <td class="py-1 px-2 text-gray-600">${f.uploadedAt}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('File Upload Demo loaded');
+        });
+    </script>
+</body>
+</html>

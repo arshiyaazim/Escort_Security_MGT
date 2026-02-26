@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Posts Management - Al-Aqsa HRM</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Job Posts Management</h1>
+                <p class="text-gray-600 text-sm">Create and manage job circulars</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="userInfo" class="text-sm text-gray-600"></span>
+                <a href="job-applications.html" class="text-blue-600 hover:underline text-sm">
+                    View Applications →
+                </a>
+                <a href="dashboard.html" class="text-gray-600 hover:text-gray-800 text-sm">
+                    ← Dashboard
+                </a>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="text-sm text-gray-500">Total Posts</div>
+                <div id="totalPostsCount" class="text-2xl font-bold text-gray-800">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="text-sm text-gray-500">Open</div>
+                <div id="openPostsCount" class="text-2xl font-bold text-green-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="text-sm text-gray-500">Closed</div>
+                <div id="closedPostsCount" class="text-2xl font-bold text-gray-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="text-sm text-gray-500">Expired (Open)</div>
+                <div id="expiredPostsCount" class="text-2xl font-bold text-orange-600">0</div>
+            </div>
+        </div>
+
+        <!-- Filters & Actions -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1" for="statusFilter">Status</label>
+                        <select id="statusFilter" onchange="applyStatusFilter()" 
+                            class="border rounded p-2 text-sm min-w-[120px]"
+                            title="Filter by status">
+                            <option value="">All</option>
+                            <option value="Open">Open</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                    <button onclick="refreshJobPosts(getCurrentStatusFilter())" 
+                        class="mt-5 text-blue-600 hover:text-blue-800 text-sm">
+                        ↻ Refresh
+                    </button>
+                </div>
+                <button onclick="showAddJobPostModal()" 
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium">
+                    + Add Job Post
+                </button>
+            </div>
+        </div>
+
+        <!-- Job Posts Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Deadline</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobPostsTableBody">
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                Loading job posts...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Public Link Reference -->
+        <div class="mt-6 bg-blue-50 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-blue-800 mb-2">Public Career Page</h3>
+            <p class="text-sm text-blue-600">
+                Share this link with candidates: 
+                <a href="job-circulars.html" target="_blank" class="underline font-mono">job-circulars.html</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Job Post Modal -->
+    <div id="jobPostModal" class="hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="modalTitle" class="text-xl font-bold text-gray-800">Add Job Post</h2>
+                    <button onclick="closeJobPostModal()" class="text-gray-400 hover:text-gray-600" title="Close modal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="jobPostForm" onsubmit="saveJobPost(event)">
+                    <input type="hidden" id="jobPostId">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="jobTitle">
+                                Job Title <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="jobTitle" required
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500"
+                                placeholder="e.g., Security Guard"
+                                title="Enter job title">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="jobDepartment">
+                                Department <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="jobDepartment" required
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500"
+                                placeholder="e.g., Operations"
+                                title="Enter department">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="jobLocation">
+                                Location
+                            </label>
+                            <input type="text" id="jobLocation"
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500"
+                                placeholder="e.g., Dhaka"
+                                title="Enter location">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="jobEmploymentType">
+                                Employment Type
+                            </label>
+                            <select id="jobEmploymentType"
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500"
+                                title="Select employment type">
+                                <option value="Full-time">Full-time</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Temporary">Temporary</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="jobDeadline">
+                                Deadline <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" id="jobDeadline" required
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500"
+                                title="Select deadline date">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="jobDescription">
+                            Description
+                        </label>
+                        <textarea id="jobDescription" rows="3"
+                            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500"
+                            placeholder="Job description and responsibilities"
+                            title="Enter job description"></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="jobRequirements">
+                            Requirements
+                        </label>
+                        <textarea id="jobRequirements" rows="3"
+                            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500"
+                            placeholder="Qualifications, skills, and experience required"
+                            title="Enter job requirements"></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <button type="button" onclick="closeJobPostModal()" 
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                            class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium">
+                            Save Job Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/job-posts.js"></script>
+
+    <script>
+        // Close modal when clicking outside
+        document.getElementById('jobPostModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeJobPostModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeJobPostModal();
+            }
+        });
+    </script>
+</body>
+</html>

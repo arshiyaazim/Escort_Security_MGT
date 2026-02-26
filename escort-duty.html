@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escort Duty Tracking - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800">Escort Duty Tracking</h1>
+                    <p class="text-sm text-gray-500">Al-Aqsa Security Services</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="userInfo" class="text-sm text-gray-600"></span>
+                    <a href="dashboard.html" class="text-sm text-blue-600 hover:text-blue-800">← Dashboard</a>
+                    <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        <!-- Date Range Navigation -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-600">From:</label>
+                    <input type="date" id="filterStartDate" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-600">To:</label>
+                    <input type="date" id="filterEndDate" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="applyDateRange()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                    Apply
+                </button>
+                <button onclick="resetDateRange()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors">
+                    Today
+                </button>
+                <div class="ml-auto text-sm text-gray-500">
+                    Showing: <span id="startDateDisplay" class="font-medium text-gray-700"></span> to <span id="endDateDisplay" class="font-medium text-gray-700"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Total Records</div>
+                <div id="summaryTotalRecords" class="text-2xl font-bold text-gray-800">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Total Days</div>
+                <div id="summaryTotalDays" class="text-2xl font-bold text-gray-800">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Active Escorts</div>
+                <div id="summaryActiveEscorts" class="text-2xl font-bold text-green-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Ongoing (Salary Pending)</div>
+                <div id="summaryOngoingEscorts" class="text-2xl font-bold text-amber-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Inactive Escorts</div>
+                <div id="summaryInactiveEscorts" class="text-2xl font-bold text-gray-600">0</div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-gray-600">View:</span>
+                <button id="escortFlatBtn" onclick="setEscortViewMode('flat')" class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 text-white transition-colors">Flat</button>
+                <button id="escortGroupedBtn" onclick="setEscortViewMode('grouped')" class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Grouped</button>
+                <button id="escortExpandAllBtn" onclick="toggleAllGroups('escortTableBody', true)" class="px-3 py-1.5 text-xs rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors hidden">Expand All</button>
+                <button id="escortCollapseAllBtn" onclick="toggleAllGroups('escortTableBody', false)" class="px-3 py-1.5 text-xs rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors hidden">Collapse All</button>
+            </div>
+            <button onclick="openAddEscortModal()" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                + Add Escort
+            </button>
+        </div>
+
+        <!-- Escort Duty Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sl No.</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vessel</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lighter</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">End</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Days</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Conveyance</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="escortTableBody">
+                        <tr>
+                            <td colspan="11" class="px-4 py-8 text-center text-gray-500">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div id="escortPagination" class="mt-4"></div>
+        </div>
+    </main>
+
+    <!-- Add Escort Modal -->
+    <div id="escortFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 id="escortFormModalTitle" class="text-lg font-semibold text-gray-800">Add Escort Duty</h3>
+                <button onclick="closeEscortModal()" class="text-gray-400 hover:text-gray-600" title="Close">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="escortForm" onsubmit="handleSubmit(event)" class="p-4 space-y-4">
+                <!-- Hidden IDs -->
+                <input type="hidden" name="employeeId" id="employeeId">
+                <input type="hidden" name="clientId" id="clientId">
+                
+                <!-- Employee & Client -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name *</label>
+                        <input type="text" name="employeeName" id="employeeName" required autocomplete="off"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Type to search employees...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                        <select name="clientName" id="clientName" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+                    </div>
+                </div>
+
+                <!-- Vessel & Lighter -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Vessel Name</label>
+                        <input type="text" name="vesselName" id="vesselName"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Lighter Name</label>
+                        <input type="text" name="lighterName" id="lighterName"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- Start Date & Shift -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                        <input type="date" name="startDate" id="startDate" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Shift</label>
+                        <select name="startShift" id="startShift"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Optional --</option>
+                            <option value="Day">Day</option>
+                            <option value="Night">Night</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- End Date & Shift -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date <span class="text-gray-400 text-xs">(leave blank if ongoing)</span></label>
+                        <input type="date" name="endDate" id="endDate"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Shift</label>
+                        <select name="endShift" id="endShift"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Optional --</option>
+                            <option value="Day">Day</option>
+                            <option value="Night">Night</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Release Point & Conveyance -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Release Point</label>
+                        <input type="text" name="releasePoint" id="releasePoint"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Conveyance</label>
+                        <input type="number" name="conveyance" id="conveyance" min="0" step="1" value="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                    <select name="status" id="status" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea name="notes" id="notes" rows="2"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end gap-2 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeEscortModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                        Save Escort
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/pagination-utils.js"></script>
+    <script src="js/group-utils.js"></script>
+    <script src="js/employee-lookup.js"></script>
+    <script src="js/client-lookup.js"></script>
+    <script src="js/escort-duty.js"></script>
+</body>
+</html>

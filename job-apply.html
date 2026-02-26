@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for Job - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-green-700 text-white">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">Al-Aqsa Security Services</h1>
+                    <p class="text-green-100 text-sm">Job Application</p>
+                </div>
+                <a href="job-circulars.html" class="text-green-100 hover:text-white text-sm">
+                    ← Back to Job Openings
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-6 max-w-3xl">
+        <!-- Loading State -->
+        <div id="loadingState" class="bg-white rounded-lg shadow p-8 text-center">
+            <svg class="w-8 h-8 mx-auto text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-500 mt-4">Loading job details...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden bg-white rounded-lg shadow p-8 text-center">
+            <svg class="w-16 h-16 mx-auto text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Unable to Load Application</h2>
+            <p id="errorMessage" class="text-gray-600 mb-4">An error occurred.</p>
+            <a href="job-circulars.html" class="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                View Available Jobs
+            </a>
+        </div>
+
+        <!-- Application Form -->
+        <div id="applicationForm" class="hidden">
+            <!-- Job Info Card -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-sm font-medium text-gray-500 mb-2">Applying for Position</h3>
+                <div id="jobInfoContainer">
+                    <!-- Job info will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Application Form Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-6">Your Information</h3>
+                
+                <form onsubmit="submitApplication(event)">
+                    <!-- Personal Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="applicantName">
+                                Full Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="applicantName" required
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="Enter your full name"
+                                title="Enter your full name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="phone">
+                                Phone <span class="text-red-500">*</span>
+                            </label>
+                            <input type="tel" id="phone" required
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="Enter your phone number"
+                                title="Enter your phone number">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="email">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input type="email" id="email" required
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="Enter your email address"
+                                title="Enter your email address">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="address">
+                                Address
+                            </label>
+                            <input type="text" id="address"
+                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="Enter your address"
+                                title="Enter your address">
+                        </div>
+                    </div>
+
+                    <!-- Education & Experience -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="education">
+                            Education
+                        </label>
+                        <textarea id="education" rows="3"
+                            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Describe your educational background (degrees, institutions, years)"
+                            title="Describe your educational background"></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="experience">
+                            Work Experience
+                        </label>
+                        <textarea id="experience" rows="4"
+                            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Describe your relevant work experience (positions, companies, responsibilities)"
+                            title="Describe your work experience"></textarea>
+                    </div>
+
+                    <!-- File Uploads (shown but files linked after submission) -->
+                    <div class="border-t pt-6 mb-6">
+                        <h4 class="text-md font-medium text-gray-800 mb-4">Supporting Documents</h4>
+                        <p class="text-sm text-gray-500 mb-4">
+                            You can upload documents after submitting your application.
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>Photo</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <span>CV / Resume</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                                <span>Certificates</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end gap-3">
+                        <a href="job-circulars.html" class="px-6 py-2 text-gray-600 hover:text-gray-800">
+                            Cancel
+                        </a>
+                        <button type="submit" id="submitBtn"
+                            class="bg-green-600 text-white px-8 py-2 rounded-lg hover:bg-green-700 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            Submit Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Success State -->
+        <div id="successState" class="hidden">
+            <div class="bg-white rounded-lg shadow p-8 text-center mb-6">
+                <svg class="w-20 h-20 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Application Submitted!</h2>
+                <p class="text-gray-600 mb-4">Thank you for your interest in joining Al-Aqsa Security Services.</p>
+                
+                <div class="bg-gray-50 rounded-lg p-4 mb-6 inline-block">
+                    <p class="text-sm text-gray-500">Your Application ID</p>
+                    <p id="applicationIdDisplay" class="text-lg font-mono font-semibold text-green-600"></p>
+                </div>
+                
+                <p class="text-sm text-gray-500 mb-6">
+                    Please save your Application ID for future reference.<br>
+                    We will contact you via email or phone regarding your application status.
+                </p>
+            </div>
+
+            <!-- File Upload Section (after submission) -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Upload Supporting Documents</h3>
+                <p class="text-sm text-gray-500 mb-6">
+                    You can now upload your photo, CV, and certificates to strengthen your application.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Photo Upload -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Photo</h4>
+                        <div id="photoUploadContainer"></div>
+                    </div>
+                    
+                    <!-- CV Upload -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">CV / Resume</h4>
+                        <div id="cvUploadContainer"></div>
+                    </div>
+                    
+                    <!-- Certificates Upload -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Certificates</h4>
+                        <div id="certificatesUploadContainer"></div>
+                    </div>
+                </div>
+                
+                <!-- Uploaded Files List -->
+                <div class="mt-6 pt-4 border-t">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Uploaded Files</h4>
+                    <div id="uploadedFilesList">
+                        <p class="text-sm text-gray-500">No files uploaded yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="text-center">
+                <a href="job-circulars.html" class="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                    View More Job Openings
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 mt-12">
+        <div class="container mx-auto px-6 py-6 text-center text-sm">
+            <p>&copy; 2026 Al-Aqsa Security Services. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/file-upload.js"></script>
+    <script src="js/job-apply.js"></script>
+
+    <script>
+        // Override showSuccess to initialize file uploads
+        const originalShowSuccess = showSuccess;
+        showSuccess = function() {
+            originalShowSuccess();
+            // Initialize file upload components after success
+            setTimeout(() => {
+                initFileUploads();
+            }, 100);
+        };
+    </script>
+</body>
+</html>

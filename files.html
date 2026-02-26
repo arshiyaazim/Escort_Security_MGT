@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload System - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/file-upload.js"></script>
+    <script src="js/files.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Al-Aqsa Security Services</h1>
+                <span class="text-sm text-gray-500">File Upload System</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userInfo" class="text-sm text-gray-600"></span>
+                <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 text-sm">Dashboard</a>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Upload Section -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Upload File</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label for="uploadModule" class="block text-sm font-medium text-gray-700 mb-1">Module *</label>
+                    <select
+                        id="uploadModule"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        title="Select module"
+                    >
+                        <option value="">Select Module</option>
+                        <option value="Employees">Employees</option>
+                        <option value="Clients">Clients</option>
+                        <option value="GuardDuty">Guard Duty</option>
+                        <option value="EscortDuty">Escort Duty</option>
+                        <option value="DayLabor">Day Labor</option>
+                        <option value="LoanAdvance">Loan &amp; Advance</option>
+                        <option value="Invoices">Invoices</option>
+                        <option value="JobApplications">Job Applications</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="uploadRecordId" class="block text-sm font-medium text-gray-700 mb-1">Record ID *</label>
+                    <input
+                        type="text"
+                        id="uploadRecordId"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        placeholder="Enter record ID"
+                    >
+                </div>
+                <div>
+                    <label for="uploadType" class="block text-sm font-medium text-gray-700 mb-1">File Type</label>
+                    <select
+                        id="uploadType"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        title="Select allowed file types"
+                    >
+                        <option value="all">All Types</option>
+                        <option value="image">Images Only</option>
+                        <option value="document">Documents Only</option>
+                    </select>
+                </div>
+            </div>
+            <div id="uploadContainer">
+                <p class="text-gray-500 text-center py-4">Select a module and record ID, then click "Prepare Upload" to activate.</p>
+            </div>
+            <div class="mt-4">
+                <button
+                    onclick="prepareUpload()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                    Prepare Upload
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter & File List -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Uploaded Files</h2>
+                <button
+                    onclick="loadFiles()"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                    Refresh List
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label for="filterModule" class="block text-sm font-medium text-gray-700 mb-1">Filter by Module</label>
+                    <select
+                        id="filterModule"
+                        onchange="loadFiles()"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        title="Filter by module"
+                    >
+                        <option value="">All Modules</option>
+                        <option value="Employees">Employees</option>
+                        <option value="Clients">Clients</option>
+                        <option value="GuardDuty">Guard Duty</option>
+                        <option value="EscortDuty">Escort Duty</option>
+                        <option value="DayLabor">Day Labor</option>
+                        <option value="LoanAdvance">Loan &amp; Advance</option>
+                        <option value="Invoices">Invoices</option>
+                        <option value="JobApplications">Job Applications</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filterRecordId" class="block text-sm font-medium text-gray-700 mb-1">Filter by Record ID</label>
+                    <input
+                        type="text"
+                        id="filterRecordId"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        placeholder="Enter record ID to filter"
+                    >
+                </div>
+                <div class="flex items-end">
+                    <button
+                        onclick="loadFiles()"
+                        class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        Apply Filter
+                    </button>
+                </div>
+            </div>
+
+            <!-- File Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Sl No.</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">File Name</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Module</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Record ID</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Size</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Uploaded By</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Uploaded At</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filesTableBody">
+                        <tr>
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                Click "Refresh List" to load files
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/user-management.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Al-Aqsa Security Services</h1>
+                <span class="text-sm text-gray-500">User Management</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userInfo" class="text-sm text-gray-600"></span>
+                <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 text-sm">Dashboard</a>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- Page Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">User Accounts</h2>
+                <p class="text-sm text-gray-500 mt-1">Manage system users and their roles</p>
+            </div>
+            <button 
+                onclick="openCreateUserModal()" 
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+            >
+                <i class="fas fa-plus"></i>
+                Add User
+            </button>
+        </div>
+
+        <!-- Role Legend -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <h3 class="text-sm font-medium text-gray-700 mb-3">Role Permissions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="flex items-start gap-3">
+                    <span class="px-2 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-semibold">Admin</span>
+                    <span class="text-gray-600">Full access to all modules including user management</span>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">Supervisor</span>
+                    <span class="text-gray-600">Can view/add/edit most modules, limited delete access</span>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-800 text-xs font-semibold">Viewer</span>
+                    <span class="text-gray-600">Read-only access to operational data</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">System Users</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                User
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Role
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Created
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>
+                                Loading users...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- User Modal -->
+    <div id="userModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <h3 id="modalTitle" class="text-lg font-semibold text-gray-800">Create New User</h3>
+                <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-600" title="Close modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="userForm" class="p-6">
+                <div class="space-y-4">
+                    <!-- Username -->
+                    <div>
+                        <label for="userUsername" class="block text-sm font-medium text-gray-700 mb-1">
+                            Username *
+                        </label>
+                        <input 
+                            type="text" 
+                            id="userUsername" 
+                            required
+                            minlength="3"
+                            maxlength="50"
+                            pattern="[a-zA-Z0-9_]+"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Enter username (alphanumeric)"
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Letters, numbers, and underscores only</p>
+                    </div>
+
+                    <!-- Password -->
+                    <div id="passwordGroup">
+                        <label for="userPassword" class="block text-sm font-medium text-gray-700 mb-1">
+                            Password *
+                        </label>
+                        <input 
+                            type="password" 
+                            id="userPassword" 
+                            minlength="6"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Minimum 6 characters"
+                        >
+                    </div>
+
+                    <!-- Role -->
+                    <div>
+                        <label for="userRole" class="block text-sm font-medium text-gray-700 mb-1">
+                            Role *
+                        </label>
+                        <select 
+                            id="userRole" 
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                            <option value="Viewer">Viewer</option>
+                            <option value="Supervisor">Supervisor</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                    <button 
+                        type="button" 
+                        onclick="closeUserModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+                    >
+                        Save User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+</body>
+</html>

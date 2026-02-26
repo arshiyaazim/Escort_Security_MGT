@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Management - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800">Salary Management</h1>
+                    <p class="text-sm text-gray-500">Al-Aqsa Security Services • Attendance-Based Ledger</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="userInfo" class="text-sm text-gray-600"></span>
+                    <a href="dashboard.html" class="text-sm text-blue-600 hover:text-blue-800">← Dashboard</a>
+                    <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label for="filterEmployee" class="text-sm text-gray-600">Employee:</label>
+                    <input type="text" id="filterEmployee" title="Filter by Employee Name" placeholder="Enter name..."
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="filterMonth" class="text-sm text-gray-600">Month:</label>
+                    <input type="month" id="filterMonth" title="Filter by Month"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="applyFilters()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                    Apply
+                </button>
+                <button onclick="resetFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors">
+                    Reset
+                </button>
+                <div class="ml-auto">
+                    <button onclick="generateSalary()" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                        Generate Salary
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Total Earned</div>
+                <div id="summaryTotalEarned" class="text-2xl font-bold text-green-600">0.00</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Total Deducted</div>
+                <div id="summaryTotalDeducted" class="text-2xl font-bold text-red-600">0.00</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Net Salary</div>
+                <div id="summaryNetSalary" class="text-2xl font-bold text-gray-800">0.00</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Running Balance</div>
+                <div id="summaryRunningBalance" class="text-2xl font-bold text-gray-800">0.00</div>
+            </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-sm text-blue-800">
+                    <strong>Attendance-Based Salary:</strong> Earnings accrue continuously from Escort Duty, Guard Duty, and Day Labor. 
+                    Loan & Advance deductions are applied immediately. Running balance carries forward across months.
+                </div>
+            </div>
+        </div>
+
+        <!-- Salary Ledger Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-sm font-semibold text-gray-700">Salary Ledger</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift/Hours</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Earned</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Deducted</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Net Change</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salaryTableBody">
+                        <tr>
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div id="salaryPagination" class="mt-4"></div>
+        </div>
+
+        <!-- Salary Rules Reference -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Salary Accrual Rules</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="p-3 bg-blue-50 rounded-lg">
+                    <div class="font-medium text-blue-800 mb-1">Escort Duty</div>
+                    <div class="text-blue-700">2 shifts = 1 day</div>
+                    <div class="text-blue-600 text-xs mt-1">Earned = dailyRate × totalDays + conveyance</div>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg">
+                    <div class="font-medium text-green-800 mb-1">Guard Duty</div>
+                    <div class="text-green-700">1 shift = 1 day (if Present)</div>
+                    <div class="text-green-600 text-xs mt-1">Earned = dailyRate</div>
+                </div>
+                <div class="p-3 bg-purple-50 rounded-lg">
+                    <div class="font-medium text-purple-800 mb-1">Day Labor</div>
+                    <div class="text-purple-700">9 hours = 1 day</div>
+                    <div class="text-purple-600 text-xs mt-1">Earned = (hours/9 × dailyRate) + overtime</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/pagination-utils.js"></script>
+    <script src="js/salary.js"></script>
+</body>
+</html>

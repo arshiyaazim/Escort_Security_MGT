@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/dashboard.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+                <h1 id="appName" class="text-xl font-bold text-gray-800"></h1>
+                <span id="appVersion" class="text-sm text-gray-500"></span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userInfo" class="text-sm text-gray-600"></span>
+                <button 
+                    onclick="logout()"
+                    class="text-gray-600 hover:text-gray-800 text-sm"
+                >
+                    Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Dashboard Controls -->
+        <div class="mb-6 flex items-center justify-between">
+            <button 
+                onclick="refreshDashboard('manual')"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+                Refresh Dashboard
+            </button>
+            <span id="lastRefreshReason" class="text-sm text-gray-500"></span>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Statistics</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Employee Stats -->
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Total Employees</div>
+                    <div id="statTotalEmployees" class="text-2xl font-bold text-gray-800">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Active Employees</div>
+                    <div id="statActiveEmployees" class="text-2xl font-bold text-green-600">-</div>
+                </div>
+                
+                <!-- Guard Duty Stats -->
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Guard Duties Today</div>
+                    <div id="statGuardDutyToday" class="text-2xl font-bold text-gray-800">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Day Shift Today</div>
+                    <div id="statDayShift" class="text-2xl font-bold text-yellow-600">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Night Shift Today</div>
+                    <div id="statNightShift" class="text-2xl font-bold text-indigo-600">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Present</div>
+                    <div id="statPresent" class="text-2xl font-bold text-green-600">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Absent</div>
+                    <div id="statAbsent" class="text-2xl font-bold text-red-600">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Late</div>
+                    <div id="statLate" class="text-2xl font-bold text-yellow-600">-</div>
+                </div>
+
+                <!-- File Upload Stats -->
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Total Files</div>
+                    <div id="statTotalFiles" class="text-2xl font-bold text-purple-600">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="text-sm text-gray-500">Files Uploaded Today</div>
+                    <div id="statTodayFiles" class="text-2xl font-bold text-purple-600">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Modules</h2>
+            <div id="moduleGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Module links will be rendered by JS based on permissions -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize header with config values
+        document.getElementById('appName').textContent = APP_NAME;
+        document.getElementById('appVersion').textContent = 'v' + APP_VERSION;
+
+        // Phase 4: Verify session with backend on load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const authed = await requireAuth();
+            if (!authed) return;
+            renderUserInfo('userInfo');
+            renderModuleLinks();
+            await refreshDashboard('init');
+        });
+
+        // Render module links
+        // Phase 4: All modules are shown. Backend enforces access on each API call.
+        // Cached user role is not used for navigation decisions.
+        function renderModuleLinks() {
+            const grid = document.getElementById('moduleGrid');
+
+            const modules = [
+                { id: 'Employees', page: 'employees.html', label: 'Employee Management', desc: 'Manage employee records', icon: 'fas fa-users' },
+                { id: 'Clients', page: 'clients.html', label: 'Client Management', desc: 'Manage client records', icon: 'fas fa-building' },
+                { id: 'GuardDuty', page: 'guard-duty.html', label: 'Guard Duty Tracking', desc: 'Track guard shifts & attendance', icon: 'fas fa-shield-alt' },
+                { id: 'DayLabor', page: 'day-labor.html', label: 'Day Labor Tracking', desc: 'Track daily labor & wages', icon: 'fas fa-hard-hat' },
+                { id: 'EscortDuty', page: 'escort-duty.html', label: 'Escort Duty Tracking', desc: 'Track escort assignments', icon: 'fas fa-car' },
+                { id: 'LoanAdvance', page: 'loan-advance.html', label: 'Loan & Advance', desc: 'Manage loans & advances', icon: 'fas fa-hand-holding-usd' },
+                { id: 'Salary', page: 'salary.html', label: 'Salary Management', desc: 'Attendance-based salary ledger', icon: 'fas fa-money-bill-wave' },
+                { id: 'Invoice', page: 'invoices.html', label: 'Invoice Management', desc: 'Client billing & invoices', icon: 'fas fa-file-invoice' },
+                { id: 'Files', page: 'files.html', label: 'File Upload System', desc: 'Upload, manage & organize files', icon: 'fas fa-folder-open' },
+                { id: 'JobPosts', page: 'job-posts.html', label: 'Job Posts', desc: 'Manage job circulars', icon: 'fas fa-briefcase' },
+                { id: 'JobApplications', page: 'job-applications.html', label: 'Job Applications', desc: 'Review candidate applications', icon: 'fas fa-file-alt' },
+                { id: 'UserManagement', page: 'user-management.html', label: 'User Management', desc: 'Manage system users & roles', icon: 'fas fa-user-cog' }
+            ];
+
+            grid.innerHTML = modules
+                .map(m => `
+                    <a href="${m.page}" class="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <i class="${m.icon} text-blue-600"></i>
+                            <span class="text-sm font-medium text-gray-800">${m.label}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">${m.desc}</div>
+                    </a>
+                `).join('');
+        }
+    </script>
+</body>
+</html>

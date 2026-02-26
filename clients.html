@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Management - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/pagination-utils.js"></script>
+    <script src="js/client-lookup.js"></script>
+    <script src="js/clients.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Al-Aqsa Security Services</h1>
+                <span class="text-sm text-gray-500">Client Management</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userInfo" class="text-sm text-gray-600"></span>
+                <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 text-sm">Dashboard</a>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- Client Form -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 id="formTitle" class="text-lg font-semibold text-gray-800 mb-4">Add New Client</h2>
+            
+            <form id="clientForm" onsubmit="handleSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    
+                    <!-- Client Name -->
+                    <div>
+                        <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">Client / Company Name *</label>
+                        <input 
+                            type="text" 
+                            id="companyName" 
+                            name="companyName"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Client or company name"
+                        >
+                    </div>
+
+                    <!-- Contact Rate -->
+                    <div>
+                        <label for="contactRate" class="block text-sm font-medium text-gray-700 mb-1">Contact Rate</label>
+                        <input 
+                            type="number" 
+                            id="contactRate" 
+                            name="contactRate"
+                            min="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Contract rate"
+                        >
+                    </div>
+
+                    <!-- Contact Person -->
+                    <div>
+                        <label for="contactPerson" class="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                        <input 
+                            type="text" 
+                            id="contactPerson" 
+                            name="contactPerson"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Contact person name"
+                        >
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                        <input 
+                            type="text" 
+                            id="phone" 
+                            name="phone"
+                            required
+                            maxlength="11"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="01XXXXXXXXX"
+                        >
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="client@example.com"
+                        >
+                    </div>
+
+                    <!-- Address -->
+                    <div class="md:col-span-2">
+                        <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                        <input 
+                            type="text" 
+                            id="address" 
+                            name="address"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Full address"
+                        >
+                    </div>
+
+                    <!-- Service Start Date -->
+                    <div>
+                        <label for="serviceStartDate" class="block text-sm font-medium text-gray-700 mb-1">Service Start Date *</label>
+                        <input 
+                            type="date" 
+                            id="serviceStartDate" 
+                            name="serviceStartDate"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                    </div>
+
+                    <!-- Assigned Employee Salary -->
+                    <div>
+                        <label for="assignedEmployeeSalary" class="block text-sm font-medium text-gray-700 mb-1">Assigned Employee Salary</label>
+                        <input 
+                            type="number" 
+                            id="assignedEmployeeSalary" 
+                            name="assignedEmployeeSalary"
+                            min="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Manual salary input"
+                        >
+                    </div>
+
+                    <!-- Due Amount -->
+                    <div>
+                        <label for="dueAmount" class="block text-sm font-medium text-gray-700 mb-1">Due Amount</label>
+                        <input 
+                            type="number" 
+                            id="dueAmount" 
+                            name="dueAmount"
+                            min="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Due amount"
+                        >
+                    </div>
+
+                    <!-- Bill Status -->
+                    <div>
+                        <label for="billStatus" class="block text-sm font-medium text-gray-700 mb-1">Bill Status *</label>
+                        <select 
+                            id="billStatus" 
+                            name="billStatus"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                            <option value="Due">Due</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                    </div>
+
+                    <!-- Last Bill Submitted -->
+                    <div>
+                        <label for="lastBillSubmitted" class="block text-sm font-medium text-gray-700 mb-1">Last Bill Submitted</label>
+                        <input 
+                            type="date" 
+                            id="lastBillSubmitted" 
+                            name="lastBillSubmitted"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                        <select 
+                            id="status" 
+                            name="status"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Form Actions -->
+                <div class="mt-6 flex gap-3">
+                    <button 
+                        type="submit"
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        Save Client
+                    </button>
+                    <button 
+                        type="button"
+                        onclick="resetForm()"
+                        class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Client List -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+                <h2 class="text-lg font-semibold text-gray-800">Client List</h2>
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Search -->
+                    <input
+                        type="text"
+                        id="clientSearch"
+                        placeholder="Search by name, ID, phone..."
+                        oninput="handleClientSearch()"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm w-56"
+                    >
+                    <!-- Status Filter -->
+                    <select
+                        id="clientStatusFilter"
+                        onchange="handleStatusFilter()"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                    >
+                        <option value="all">All Status</option>
+                        <option value="active" selected>Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <button 
+                        onclick="refreshClients()"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        Refresh List
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Sl No.</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Client ID</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Client Name</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Contact Person</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Phone</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Contact Rate</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Bill Status</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Due Amount</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody">
+                        <tr>
+                            <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+                                Click "Refresh List" to load clients
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div id="clientsPagination" class="mt-4"></div>
+        </div>
+
+    </main>
+
+    <!-- Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg max-w-lg w-full mx-4">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 id="modalTitle" class="text-lg font-semibold text-gray-800"></h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent" class="px-6 py-4">
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

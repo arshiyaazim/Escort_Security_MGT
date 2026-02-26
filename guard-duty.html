@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guard Duty Tracking - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/pagination-utils.js"></script>
+    <script src="js/group-utils.js"></script>
+    <script src="js/employee-lookup.js"></script>
+    <script src="js/client-lookup.js"></script>
+    <script src="js/guard-duty.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Al-Aqsa Security Services</h1>
+                <span class="text-sm text-gray-500">Guard Duty Tracking</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userInfo" class="text-sm text-gray-600"></span>
+                <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 text-sm">Dashboard</a>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Date Navigation -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <button 
+                        onclick="navigateDate('previous')"
+                        class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        ← Previous
+                    </button>
+                    <button 
+                        onclick="navigateDate('today')"
+                        class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        Today
+                    </button>
+                    <button 
+                        onclick="navigateDate('next')"
+                        class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        Next →
+                    </button>
+                </div>
+                <div class="text-lg font-semibold text-gray-800">
+                    <span id="currentDateDisplay"></span>
+                </div>
+                <button 
+                    onclick="refreshGuardDuty(currentDate)"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                >
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Total Records</div>
+                <div id="summaryTotal" class="text-2xl font-bold text-gray-800">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Day Shift</div>
+                <div id="summaryDayShift" class="text-2xl font-bold text-yellow-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Night Shift</div>
+                <div id="summaryNightShift" class="text-2xl font-bold text-indigo-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Present</div>
+                <div id="summaryPresent" class="text-2xl font-bold text-green-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Absent</div>
+                <div id="summaryAbsent" class="text-2xl font-bold text-red-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-sm text-gray-500">Late</div>
+                <div id="summaryLate" class="text-2xl font-bold text-yellow-600">0</div>
+            </div>
+        </div>
+
+        <!-- Duty Records Table -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Duty Records</h2>
+                <div class="flex items-center gap-2">
+                    <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+                        <button id="btnFlatView" onclick="setDutyViewMode('flat')" class="px-3 py-1.5 bg-blue-600 text-white font-medium">Flat</button>
+                        <button id="btnGroupedView" onclick="setDutyViewMode('grouped')" class="px-3 py-1.5 bg-white text-gray-600 hover:bg-gray-50 font-medium">Grouped</button>
+                    </div>
+                    <button id="btnExpandAll" onclick="toggleAllGroups('dutyTableBody', true)" class="hidden px-2 py-1.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200">Expand All</button>
+                    <button id="btnCollapseAll" onclick="toggleAllGroups('dutyTableBody', false)" class="hidden px-2 py-1.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200">Collapse All</button>
+                    <button 
+                        onclick="openAddDutyModal()"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        + Add Duty
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Sl No.</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Employee</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Client</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Date</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Shift</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Check-In</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Check-Out</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Notes</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dutyTableBody">
+                        <tr>
+                            <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+                                Click "Refresh" to load duty records
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div id="dutyPagination" class="mt-4"></div>
+        </div>
+
+    </main>
+
+    <!-- Add Duty Modal -->
+    <div id="dutyFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg max-w-lg w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Add Duty Record</h3>
+                <button onclick="closeDutyModal()" class="text-gray-500 hover:text-gray-700" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="dutyForm" onsubmit="handleSubmit(event)" class="px-6 py-4">
+                <div class="space-y-4">
+                    
+                    <!-- Employee ID (hidden, set by lookup) -->
+                    <input type="hidden" id="employeeId" name="employeeId">
+
+                    <!-- Employee Name (lookup) -->
+                    <div>
+                        <label for="employeeName" class="block text-sm font-medium text-gray-700 mb-1">Employee *</label>
+                        <input 
+                            type="text" 
+                            id="employeeName" 
+                            name="employeeName"
+                            required
+                            autocomplete="off"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Type to search employees..."
+                        >
+                    </div>
+
+                    <!-- Client (lookup) -->
+                    <div>
+                        <input type="hidden" id="clientId" name="clientId">
+                        <label for="clientName" class="block text-sm font-medium text-gray-700 mb-1">Client *</label>
+                        <input 
+                            type="text" 
+                            id="clientName" 
+                            name="clientName"
+                            required
+                            autocomplete="off"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Type to search clients..."
+                        >
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                        <input 
+                            type="date" 
+                            id="date" 
+                            name="date"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                    </div>
+
+                    <!-- Shift -->
+                    <div>
+                        <label for="shift" class="block text-sm font-medium text-gray-700 mb-1">Shift *</label>
+                        <select 
+                            id="shift" 
+                            name="shift"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                            <option value="Day">Day</option>
+                            <option value="Night">Night</option>
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                        <select 
+                            id="status" 
+                            name="status"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                            <option value="Late">Late</option>
+                        </select>
+                    </div>
+
+                    <!-- Check-In -->
+                    <div>
+                        <label for="checkIn" class="block text-sm font-medium text-gray-700 mb-1">Check-In</label>
+                        <input 
+                            type="time" 
+                            id="checkIn" 
+                            name="checkIn"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                    </div>
+
+                    <!-- Check-Out -->
+                    <div>
+                        <label for="checkOut" class="block text-sm font-medium text-gray-700 mb-1">Check-Out</label>
+                        <input 
+                            type="time" 
+                            id="checkOut" 
+                            name="checkOut"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea 
+                            id="notes" 
+                            name="notes"
+                            rows="2"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Additional notes"
+                        ></textarea>
+                    </div>
+
+                </div>
+
+                <!-- Form Actions -->
+                <div class="mt-6 flex gap-3 justify-end">
+                    <button 
+                        type="button"
+                        onclick="closeDutyModal()"
+                        class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        Save Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize date display on page load (safe access)
+        document.getElementById('currentDateDisplay').textContent = (window.currentDate || '');
+    </script>
+</body>
+</html>

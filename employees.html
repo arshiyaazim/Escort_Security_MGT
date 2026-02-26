@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/client-lookup.js"></script>
+    <script src="js/pagination-utils.js"></script>
+    <script src="js/employee-lookup.js"></script>
+    <script src="js/employees.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Al-Aqsa Security Services</h1>
+                <span class="text-sm text-gray-500">Employee Management</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userInfo" class="text-sm text-gray-600"></span>
+                <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 text-sm">Dashboard</a>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- Employee Form -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 id="formTitle" class="text-lg font-semibold text-gray-800 mb-4">Add New Employee</h2>
+            
+            <form id="employeeForm" onsubmit="handleSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    
+                    <!-- Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Employee name"
+                        >
+                    </div>
+
+                    <!-- Phone (Employee ID) -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone (Employee ID) *</label>
+                        <input 
+                            type="text" 
+                            id="phone" 
+                            name="phone"
+                            required
+                            pattern="0[0-9]{10}"
+                            maxlength="11"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="01XXXXXXXXX"
+                        >
+                    </div>
+
+                    <!-- Role -->
+                    <div>
+                        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                        <select 
+                            id="role" 
+                            name="role"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                            <option value="">Select Role</option>
+                            <option value="Security Guard">Security Guard</option>
+                            <option value="Armed Guard">Armed Guard</option>
+                            <option value="Supervisor">Supervisor</option>
+                            <option value="Team Leader">Team Leader</option>
+                            <option value="Driver">Driver</option>
+                            <option value="Escort">Escort</option>
+                            <option value="Receptionist">Receptionist</option>
+                            <option value="Office Assistant">Office Assistant</option>
+                            <option value="Accountant">Accountant</option>
+                            <option value="HR Officer">HR Officer</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <!-- Salary -->
+                    <div>
+                        <label for="salary" class="block text-sm font-medium text-gray-700 mb-1">Salary *</label>
+                        <input 
+                            type="number" 
+                            id="salary" 
+                            name="salary"
+                            required
+                            min="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Monthly salary"
+                        >
+                    </div>
+
+                    <!-- Deployed At -->
+                    <div>
+                        <label for="deployedAt" class="block text-sm font-medium text-gray-700 mb-1">Deployed At</label>
+                        <select 
+                            id="deployedAt" 
+                            name="deployedAt"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        ></select>
+                    </div>
+
+                    <!-- Date of Join -->
+                    <div>
+                        <label for="joinDate" class="block text-sm font-medium text-gray-700 mb-1">Date of Join *</label>
+                        <input 
+                            type="date" 
+                            id="joinDate" 
+                            name="joinDate"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                    </div>
+
+                    <!-- NID -->
+                    <div>
+                        <label for="nid" class="block text-sm font-medium text-gray-700 mb-1">NID No. *</label>
+                        <input 
+                            type="text" 
+                            id="nid" 
+                            name="nid"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="National ID number"
+                        >
+                    </div>
+
+                    <!-- Guardian Name -->
+                    <div>
+                        <label for="guardianName" class="block text-sm font-medium text-gray-700 mb-1">Father/Mother Name *</label>
+                        <input 
+                            type="text" 
+                            id="guardianName" 
+                            name="guardianName"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Guardian name"
+                        >
+                    </div>
+
+                    <!-- Guardian Phone -->
+                    <div>
+                        <label for="guardianPhone" class="block text-sm font-medium text-gray-700 mb-1">Father/Mother Mobile No. *</label>
+                        <input 
+                            type="text" 
+                            id="guardianPhone" 
+                            name="guardianPhone"
+                            required
+                            maxlength="11"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="01XXXXXXXXX"
+                        >
+                    </div>
+
+                    <!-- Address -->
+                    <div class="md:col-span-2">
+                        <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                        <input 
+                            type="text" 
+                            id="address" 
+                            name="address"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            placeholder="Full address"
+                        >
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                        <select 
+                            id="status" 
+                            name="status"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Terminated">Terminated</option>
+                            <option value="Suspended">Suspended</option>
+                            <option value="Retired">Retired</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Form Actions -->
+                <div class="mt-6 flex gap-3">
+                    <button 
+                        type="submit"
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        Save Employee
+                    </button>
+                    <button 
+                        type="button"
+                        onclick="resetForm()"
+                        class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Employee List -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Employee List</h2>
+                <button 
+                    onclick="refreshEmployees()"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                    Refresh List
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="employeeSearch" 
+                        placeholder="Search by Employee ID, Name, Phone, or Role..."
+                        oninput="filterEmployees()"
+                        class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                    >
+                    <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Sl No.</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Name</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Phone</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Role</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Salary</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Deployed At</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeesTableBody">
+                        <tr>
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                Click "Refresh List" to load employees
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div id="employeesPagination" class="mt-4"></div>
+        </div>
+
+        <!-- Payroll Summary Section -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Employee Payroll Summary</h2>
+            <div class="flex flex-wrap items-end gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+                    <input type="hidden" id="payrollEmployeeId">
+                    <input 
+                        type="text" 
+                        id="payrollEmployeeName"
+                        autocomplete="off"
+                        class="w-64 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Type to search employees..."
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                    <input type="month" id="payrollMonth" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="loadPayrollSummary()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                    Load Summary
+                </button>
+            </div>
+            <div id="payrollSummaryResult" class="text-sm text-gray-500">Select an employee and month, then click Load Summary.</div>
+        </div>
+
+    </main>
+
+    <!-- Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg max-w-lg w-full mx-4">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 id="modalTitle" class="text-lg font-semibold text-gray-800"></h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent" class="px-6 py-4">
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
