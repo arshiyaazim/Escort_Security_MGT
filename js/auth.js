@@ -283,8 +283,12 @@ function getRoleBadge(role) {
     switch (role) {
         case 'Admin':
             return '<span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Admin</span>';
-        case 'Supervisor':
-            return '<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Supervisor</span>';
+        case 'Operations':
+            return '<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Operations</span>';
+        case 'Finance':
+            return '<span class="px-2 py-1 text-xs rounded-full bg-emerald-100 text-emerald-800">Finance</span>';
+        case 'Auditor':
+            return '<span class="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">Auditor</span>';
         case 'Viewer':
             return '<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Viewer</span>';
         default:

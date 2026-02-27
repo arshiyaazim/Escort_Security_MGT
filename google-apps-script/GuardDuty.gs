@@ -1,41 +1,36 @@
 /**
  * Al-Aqsa HRM Backend - Guard Duty Handler
  * Operations for guard duty attendance tracking
+ *
+ * Phase 1 schema:
+ *   id, employeeId, employeeName, clientId, clientName,
+ *   date, shift, rateSnapshot, status, createdAt
  */
 
 /**
  * Get guard duty records (filtered by date)
  */
 function handleGetGuardDuty(payload, sessionUser) {
-  // Permission check
   if (!checkPermission(sessionUser.role, 'GuardDuty', 'canView')) {
     return unauthorizedResponse('getGuardDuty');
   }
-  
+
   try {
-    let records = getSheetData(SHEETS.GUARD_DUTY);
-    
-    // Filter by date if provided
-    // Normalize both sides: sheet may store Date objects via getValues()
+    var records = getSheetData(SHEETS.GUARD_DUTY);
+
     if (payload.date) {
       var filterDate = normalizeDateValue(payload.date);
       records = records.filter(function(r) {
         return normalizeDateValue(r.date) === filterDate;
       });
     }
-    
-    // Normalize date field in returned records so frontend always gets strings
+
     records = records.map(function(r) {
       r.date = normalizeDateValue(r.date);
       return r;
     });
-    
-    return {
-      success: true,
-      action: 'getGuardDuty',
-      data: records,
-      message: 'Guard duty records retrieved'
-    };
+
+    return { success: true, action: 'getGuardDuty', data: records, message: 'Guard duty records retrieved' };
   } catch (error) {
     return sanitizedError('getGuardDuty', error);
   }
@@ -44,40 +39,28 @@ function handleGetGuardDuty(payload, sessionUser) {
 /**
  * Add guard duty record
  *
- * Required: id, employeeId, employeeName, clientId, clientName, date, shift, status
- * Date must be valid YYYY-MM-DD
+ * Phase 1 changes:
+ *   - Fetches client.guardRate → stores as rateSnapshot
+ *   - Appends earning entry to salary ledger on Present status
  */
 function handleAddGuardDuty(payload, sessionUser) {
-  // Permission check
   if (!checkPermission(sessionUser.role, 'GuardDuty', 'canAdd')) {
     return unauthorizedResponse('addGuardDuty');
   }
-  
+
   try {
-    // Validate required fields (strict — employeeId and clientId MUST be present)
     var requiredFields = ['id', 'date', 'employeeId', 'employeeName', 'clientId', 'clientName'];
     var validationError = validateRequired(payload, requiredFields);
     if (validationError) {
-      return {
-        success: false,
-        action: 'addGuardDuty',
-        data: null,
-        message: validationError
-      };
+      return { success: false, action: 'addGuardDuty', data: null, message: validationError };
     }
 
-    // Validate date format (YYYY-MM-DD)
     var dateStr = String(payload.date).trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      return {
-        success: false,
-        action: 'addGuardDuty',
-        data: null,
-        message: 'Invalid date format. Expected YYYY-MM-DD.'
-      };
+      return { success: false, action: 'addGuardDuty', data: null, message: 'Invalid date format. Expected YYYY-MM-DD.' };
     }
-    
-    // Cross-duty conflict validation (forward-only)
+
+    // Cross-duty conflict validation
     var conflictCheck = validateEmployeeDutyConflict({
       employeeId: String(payload.employeeId).trim(),
       dates: [dateStr],
@@ -89,33 +72,31 @@ function handleAddGuardDuty(payload, sessionUser) {
       return { success: false, action: 'addGuardDuty', data: null, message: conflictCheck.message };
     }
 
-    // Prepare record data (v3 schema — aligned with frontend and sheet headers)
+    // Fetch client guardRate for snapshot
+    var clientId = String(payload.clientId).trim();
+    var client = findById(SHEETS.CLIENTS, clientId);
+    var rateSnapshot = client ? parseNumber(client.guardRate, 0) : 0;
+
     var recordData = {
       id: payload.id,
-      date: dateStr,
       employeeId: String(payload.employeeId).trim(),
       employeeName: String(payload.employeeName).trim(),
-      clientId: String(payload.clientId).trim(),
+      clientId: clientId,
       clientName: String(payload.clientName).trim(),
+      date: dateStr,
       shift: payload.shift || 'Day',
+      rateSnapshot: rateSnapshot,
       status: payload.status || 'Present',
-      checkIn: payload.checkIn || '',
-      checkOut: payload.checkOut || '',
-      notes: payload.notes || ''
+      createdAt: getNowISO()
     };
-    
-    // Add record
+
     addRecord(SHEETS.GUARD_DUTY, recordData);
-    
-    // Activity logging
+
+    // Salary crediting delegated to processDailySalary() (Phase 2)
+
     logActivity({ sessionUser: sessionUser, action: 'addGuardDuty', module: 'GuardDuty', recordId: recordData.id, summary: recordData.employeeName + ' guard duty ' + dateStr + ' ' + recordData.shift, date: dateStr, employeeId: recordData.employeeId, clientId: recordData.clientId, success: true });
 
-    return {
-      success: true,
-      action: 'addGuardDuty',
-      data: recordData,
-      message: 'Guard duty record added'
-    };
+    return { success: true, action: 'addGuardDuty', data: recordData, message: 'Guard duty record added' };
   } catch (error) {
     return sanitizedError('addGuardDuty', error);
   }
@@ -140,10 +121,13 @@ function handleDeleteGuardDuty(payload, sessionUser) {
       };
     }
 
+    // Reverse any salary ledger earnings before deleting the duty
+    var reversals = reverseDutyEntries(payload.id);
+
     const deleted = deleteRecord(SHEETS.GUARD_DUTY, payload.id);
     
     if (deleted) {
-      logActivity({ sessionUser: sessionUser, action: 'deleteGuardDuty', module: 'GuardDuty', recordId: payload.id, summary: 'Deleted guard duty ' + payload.id });
+      logActivity({ sessionUser: sessionUser, action: 'deleteGuardDuty', module: 'GuardDuty', recordId: payload.id, summary: 'Deleted guard duty ' + payload.id + ' (reversed ' + reversals.length + ' ledger entries)' });
     }
 
     if (!deleted) {

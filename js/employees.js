@@ -453,83 +453,11 @@ function populatePayrollEmployeeDropdown() {
 
 /**
  * Load and render employee payroll summary
+ * REMOVED (Phase 0) — Engine B (getEmployeePayrollSummary) has been removed.
+ * Will be rebuilt in Phase 1 with unified salary engine.
  */
-async function loadPayrollSummary() {
-    const employeeId = document.getElementById('payrollEmployeeId')?.value;
-    const month = document.getElementById('payrollMonth')?.value;
-    const container = document.getElementById('payrollSummaryResult');
-    if (!container) return;
-
-    if (!employeeId || !month) {
-        container.innerHTML = '<p class="text-amber-600">Please select both an employee and a month.</p>';
-        return;
-    }
-
-    container.innerHTML = '<p class="text-gray-400">Loading payroll summary...</p>';
-
-    try {
-        const response = await request('getEmployeePayrollSummary', { employeeId, month });
-        if (!response.success) {
-            container.innerHTML = `<p class="text-red-600">${escapeHtml(response.error || 'Failed to load payroll summary')}</p>`;
-            return;
-        }
-        const d = response.data;
-        container.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div class="border rounded-lg p-4">
-                <h3 class="font-semibold text-gray-700 mb-2">Guard Duty</h3>
-                <div class="space-y-1 text-sm">
-                    <div class="flex justify-between"><span>Working Days (shifts)</span><span class="font-medium">${d.guardDuty.workingDays}</span></div>
-                    <div class="flex justify-between"><span>Present</span><span class="font-medium">${d.guardDuty.presentDays}</span></div>
-                    <div class="flex justify-between"><span>Late</span><span class="font-medium">${d.guardDuty.lateDays}</span></div>
-                    <div class="flex justify-between"><span>Absent</span><span class="font-medium text-red-600">${d.guardDuty.absentDays}</span></div>
-                    <div class="flex justify-between"><span>Overtime Shifts</span><span class="font-medium">${d.guardDuty.overtimeShifts}</span></div>
-                </div>
-            </div>
-            <div class="border rounded-lg p-4">
-                <h3 class="font-semibold text-gray-700 mb-2">Escort Duty</h3>
-                <div class="space-y-1 text-sm">
-                    <div class="flex justify-between"><span>Completed Programs</span><span class="font-medium">${d.escortDuty.completedPrograms}</span></div>
-                    <div class="flex justify-between"><span>Working Days</span><span class="font-medium">${d.escortDuty.workingDays}</span></div>
-                    <div class="flex justify-between"><span>Conveyance</span><span class="font-medium">${d.escortDuty.conveyance}</span></div>
-                </div>
-            </div>
-            <div class="border rounded-lg p-4">
-                <h3 class="font-semibold text-gray-700 mb-2">Day Labor</h3>
-                <div class="space-y-1 text-sm">
-                    <div class="flex justify-between"><span>Total Hours</span><span class="font-medium">${d.dayLabor.totalHours}</span></div>
-                    <div class="flex justify-between"><span>Working Days (9h=1d)</span><span class="font-medium">${d.dayLabor.workingDays}</span></div>
-                    <div class="flex justify-between"><span>Overtime Hours</span><span class="font-medium">${d.dayLabor.overtimeHours}</span></div>
-                    <div class="flex justify-between"><span>Shift Count</span><span class="font-medium">${d.dayLabor.shiftCount}</span></div>
-                </div>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="border rounded-lg p-4">
-                <h3 class="font-semibold text-gray-700 mb-2">Loans / Advances</h3>
-                <div class="space-y-1 text-sm">
-                    <div class="flex justify-between"><span>Active Loans</span><span class="font-medium">${d.loans.activeCount}</span></div>
-                    <div class="flex justify-between border-t pt-1"><span class="font-semibold">Total Deduction</span><span class="font-bold text-red-600">${d.loans.totalDeduction}</span></div>
-                </div>
-            </div>
-            <div class="border rounded-lg p-4 bg-blue-50">
-                <h3 class="font-semibold text-blue-800 mb-2">Payroll Totals</h3>
-                <div class="space-y-1 text-sm">
-                    <div class="flex justify-between"><span>Salary</span><span class="font-medium">${d.salary}</span></div>
-                    <div class="flex justify-between"><span>Days in Month</span><span class="font-medium">${d.totalDaysInMonth}</span></div>
-                    <div class="flex justify-between"><span>Daily Rate</span><span class="font-medium">${d.dailyRate}</span></div>
-                    <div class="flex justify-between"><span>Total Working Days</span><span class="font-medium">${d.totalWorkingDays}</span></div>
-                    <div class="flex justify-between"><span>Conveyance</span><span class="font-medium">${d.escortDuty.conveyance}</span></div>
-                    <div class="flex justify-between"><span>Gross</span><span class="font-medium">${d.gross}</span></div>
-                    <div class="flex justify-between"><span>Deductions</span><span class="font-medium text-red-600">-${d.totalDeductions}</span></div>
-                    <div class="flex justify-between border-t pt-1"><span class="font-bold text-lg">Net Pay</span><span class="font-bold text-lg text-green-700">${d.net}</span></div>
-                </div>
-            </div>
-        </div>`;
-    } catch (error) {
-        console.error('Failed to load payroll summary:', error);
-        container.innerHTML = '<p class="text-red-600">Failed to load payroll summary. Please try again.</p>';
-    }
+function loadPayrollSummary() {
+    console.warn('loadPayrollSummary() removed in Phase 0 cleanup. Will be rebuilt in Phase 1.');
 }
 
 // ============================================
@@ -564,15 +492,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initial load
     await refreshEmployees();
-    
-    // Initialize payroll employee typeahead lookup
-    if (typeof initEmployeeLookup === 'function') {
-        initEmployeeLookup({ inputId: 'payrollEmployeeName', hiddenIdField: 'payrollEmployeeId' });
-        if (typeof preloadEmployeeLookup === 'function') preloadEmployeeLookup();
-    }
-    const monthInput = document.getElementById('payrollMonth');
-    if (monthInput) {
-        const now = new Date();
-        monthInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-    }
 });

@@ -49,14 +49,15 @@ function setupDatabase() {
   // Create all sheets with headers
   createSheet(ss, SHEETS.USERS, ['id', 'username', 'passwordHash', 'role', 'status', 'createdAt']);
   createSheet(ss, SHEETS.EMPLOYEES, ['id', 'name', 'phone', 'nid', 'role', 'salary', 'deployedAt', 'joinDate', 'guardianName', 'guardianPhone', 'address', 'status']);
-  createSheet(ss, SHEETS.CLIENTS, ['id', 'companyName', 'contactPerson', 'phone', 'email', 'address', 'status', 'name', 'contactRate', 'serviceStartDate', 'lastBillSubmitted', 'billStatus', 'dueAmount', 'assignedEmployeeSalary', 'createdAt']);
-  createSheet(ss, SHEETS.GUARD_DUTY, ['id', 'date', 'employeeId', 'employeeName', 'clientId', 'clientName', 'shift', 'status', 'checkIn', 'checkOut', 'notes']);
-  createSheet(ss, SHEETS.ESCORT_DUTY, ['id', 'employeeId', 'employeeName', 'clientId', 'clientName', 'vesselName', 'lighterName', 'startDate', 'startShift', 'endDate', 'endShift', 'releasePoint', 'totalDays', 'conveyance', 'status', 'notes']);
-  createSheet(ss, SHEETS.DAY_LABOR, ['id', 'date', 'employeeId', 'employeeName', 'clientId', 'clientName', 'shift', 'hoursWorked', 'rate', 'amount', 'notes']);
-  createSheet(ss, SHEETS.LOAN_ADVANCE, ['id', 'employeeId', 'employeeName', 'type', 'amount', 'issueDate', 'paymentMethod', 'remarks', 'repaymentType', 'monthlyDeduct', 'status', 'createdAt']);
-  createSheet(ss, SHEETS.SALARY_LEDGER, ['id', 'employeeId', 'employeeName', 'sourceModule', 'sourceId', 'date', 'shiftOrHours', 'earnedAmount', 'deductedAmount', 'netChange', 'runningBalance', 'month', 'createdAt']);
+  createSheet(ss, SHEETS.CLIENTS, ['id', 'companyName', 'guardRate', 'escortRate', 'dayLaborRate', 'overtimeRate', 'status', 'createdAt']);
+  createSheet(ss, SHEETS.GUARD_DUTY, ['id', 'employeeId', 'employeeName', 'clientId', 'clientName', 'date', 'shift', 'rateSnapshot', 'status', 'createdAt']);
+  createSheet(ss, SHEETS.ESCORT_DUTY, ['id', 'employeeId', 'employeeName', 'clientId', 'clientName', 'vesselName', 'lighterVessel', 'startDate', 'startShift', 'endDate', 'endShift', 'totalDays', 'rateSnapshot', 'conveyance', 'status', 'createdAt']);
+  createSheet(ss, SHEETS.DAY_LABOR, ['id', 'employeeId', 'employeeName', 'clientId', 'clientName', 'date', 'hoursWorked', 'baseRateSnapshot', 'overtimeRateSnapshot', 'baseAmount', 'overtimeAmount', 'totalAmount', 'createdAt']);
+  createSheet(ss, SHEETS.LOAN_ADVANCE, ['id', 'employeeId', 'employeeName', 'amount', 'issueDate', 'status', 'createdAt']);
+  createSheet(ss, SHEETS.SALARY_LEDGER, ['id', 'employeeId', 'employeeName', 'clientId', 'clientName', 'sourceModule', 'sourceId', 'entryType', 'dutyType', 'rateSnapshot', 'quantity', 'amount', 'reversalOf', 'createdAt', 'runningBalance']);
   createSheet(ss, SHEETS.PROCESSED_EVENTS, ['eventKey', 'processedAt']);
-  createSheet(ss, SHEETS.INVOICES, ['id', 'invoiceNumber', 'clientId', 'clientName', 'periodStart', 'periodEnd', 'totalEscortDays', 'escortAmount', 'totalGuardDays', 'guardAmount', 'totalLaborHours', 'laborAmount', 'subtotal', 'vatPercent', 'vatAmount', 'totalAmount', 'status', 'createdAt']);
+  createSheet(ss, SHEETS.INVOICES, ['id', 'clientId', 'clientName', 'periodStart', 'periodEnd', 'grossAmount', 'salaryCost', 'margin', 'status', 'createdAt']);
+  createSheet(ss, SHEETS.INVOICE_DETAILS, ['invoiceId', 'dutyType', 'dutyId', 'employeeId', 'quantity', 'rate', 'amount']);
   createSheet(ss, SHEETS.FILE_UPLOADS, ['id', 'module', 'recordId', 'fileName', 'fileType', 'fileSize', 'driveFileId', 'driveUrl', 'uploadedAt', 'uploadedBy']);
   createSheet(ss, SHEETS.JOB_POSTS, ['id', 'title', 'description', 'requirements', 'location', 'salary', 'status', 'openDate', 'closeDate', 'createdAt']);
   createSheet(ss, SHEETS.JOB_APPLICATIONS, ['id', 'jobId', 'applicantName', 'phone', 'email', 'experience', 'education', 'skills', 'resumeUrl', 'status', 'appliedAt', 'notes']);
@@ -79,7 +80,7 @@ function setupDatabase() {
   const folderId = folder.getId();
   
   // Store configuration in PropertiesService (single source of truth)
-  initConfig(spreadsheetId, folderId, 500);
+  initConfig(spreadsheetId, folderId);
   
   // Log results
   Logger.log('='.repeat(60));
@@ -123,6 +124,7 @@ function migrateDatabase() {
     [SHEETS.ESCORT_DUTY]:      ['id', 'employeeId', 'employeeName', 'clientId', 'clientName', 'vesselName', 'lighterName', 'startDate', 'startShift', 'endDate', 'endShift', 'releasePoint', 'totalDays', 'conveyance', 'status', 'notes'],
     [SHEETS.DAY_LABOR]:        ['id', 'date', 'employeeId', 'employeeName', 'clientId', 'clientName', 'shift', 'hoursWorked', 'rate', 'amount', 'notes'],
     [SHEETS.LOAN_ADVANCE]:     ['id', 'employeeId', 'employeeName', 'type', 'amount', 'issueDate', 'paymentMethod', 'remarks', 'repaymentType', 'monthlyDeduct', 'status', 'createdAt'],
+    [SHEETS.SALARY_LEDGER]:    ['id', 'employeeId', 'employeeName', 'clientId', 'clientName', 'sourceModule', 'sourceId', 'entryType', 'dutyType', 'rateSnapshot', 'quantity', 'amount', 'reversalOf', 'createdAt', 'runningBalance'],
     [SHEETS.ACTIVITY_LOGS]:    ['id', 'timestamp', 'userId', 'userName', 'role', 'action', 'module', 'recordId', 'summary', 'date', 'employeeId', 'clientId', 'success', 'message', 'payloadHash']
   };
 
@@ -339,8 +341,15 @@ function addRecord(sheetName, record) {
 
 /**
  * Update record in sheet
+ *
+ * LEDGER PROTECTION: salaryLedger is immutable — updates blocked.
+ * Use reversal entries via appendLedgerEntry() instead.
  */
 function updateRecord(sheetName, id, record, idColumn = 'id') {
+  if (sheetName === SHEETS.SALARY_LEDGER) {
+    throw new Error('Ledger is immutable. Use reversal.');
+  }
+
   const sheet = getSheet(sheetName);
   const rowIndex = findRowById(sheetName, id, idColumn);
   
@@ -358,8 +367,15 @@ function updateRecord(sheetName, id, record, idColumn = 'id') {
 
 /**
  * Delete record from sheet
+ *
+ * LEDGER PROTECTION: salaryLedger is immutable — deletes blocked.
+ * Use reversal entries via appendLedgerEntry() instead.
  */
 function deleteRecord(sheetName, id, idColumn = 'id') {
+  if (sheetName === SHEETS.SALARY_LEDGER) {
+    throw new Error('Ledger is immutable. Use reversal.');
+  }
+
   const sheet = getSheet(sheetName);
   const rowIndex = findRowById(sheetName, id, idColumn);
   
@@ -543,7 +559,7 @@ function assertAuthenticated(sessionResult) {
  *   string permission → single checkPermission() call.
  *
  * @param {string} action - the routeAction case name
- * @param {string} role   - sessionUser.role (Admin | Supervisor | Viewer)
+ * @param {string} role   - sessionUser.role (Admin | Operations | Finance | Auditor | Viewer)
  * @returns {Object|null} denial response if forbidden, or null if OK
  */
 function assertAuthorized(action, role) {

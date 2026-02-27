@@ -18,8 +18,7 @@
 // Fallback config (only used if PropertiesService is empty)
 const CONFIG_FALLBACK = {
   SPREADSHEET_ID: '1vI2YMvuXHbF4tKbw6Bi-Z7X_nYCnUaZaj5bWglTdAlU',
-  DRIVE_FOLDER_ID: '1pqa5gEMF2bppYpxDMLHSbeALNAvQkNNo',
-  DEFAULT_DAILY_RATE: 500
+  DRIVE_FOLDER_ID: '1pqa5gEMF2bppYpxDMLHSbeALNAvQkNNo'
 };
 
 // App version for deployment tracking
@@ -68,19 +67,17 @@ function getConfigValue(key) {
 // Shorthand accessors
 const CONFIG = {
   get SPREADSHEET_ID() { return getConfigValue('SPREADSHEET_ID'); },
-  get DRIVE_FOLDER_ID() { return getConfigValue('DRIVE_FOLDER_ID'); },
-  get DEFAULT_DAILY_RATE() { return getConfigValue('DEFAULT_DAILY_RATE'); }
+  get DRIVE_FOLDER_ID() { return getConfigValue('DRIVE_FOLDER_ID'); }
 };
 
 /**
  * Initialize configuration (called by setupDatabase)
  */
-function initConfig(spreadsheetId, driveFolderId, defaultDailyRate) {
+function initConfig(spreadsheetId, driveFolderId) {
   const scriptProps = PropertiesService.getScriptProperties();
   const newConfig = {
     SPREADSHEET_ID: spreadsheetId,
-    DRIVE_FOLDER_ID: driveFolderId,
-    DEFAULT_DAILY_RATE: defaultDailyRate || 500
+    DRIVE_FOLDER_ID: driveFolderId
   };
   
   scriptProps.setProperty('APP_CONFIG', JSON.stringify(newConfig));
@@ -101,6 +98,7 @@ const SHEETS = {
   SALARY_LEDGER: 'salaryLedger',
   PROCESSED_EVENTS: 'processedEvents',
   INVOICES: 'invoices',
+  INVOICE_DETAILS: 'invoiceDetails',
   FILE_UPLOADS: 'fileUploads',
   JOB_POSTS: 'jobPosts',
   JOB_APPLICATIONS: 'jobApplications',
@@ -133,29 +131,46 @@ const BACKEND_PERMISSIONS = {
     GuardDuty: { canView: true, canAdd: true, canEdit: true, canDelete: true },
     EscortDuty: { canView: true, canAdd: true, canEdit: true, canDelete: true },
     DayLabor: { canView: true, canAdd: true, canEdit: true, canDelete: true },
-    LoanAdvance: { canView: true, canAdd: true, canEdit: true, canDelete: true },
-    Salary: { canView: true, canAdd: true, canEdit: true, canDelete: true },
+    LoanAdvance: { canView: true, canAdd: true, canEdit: false, canDelete: true },
+    Salary: { canView: true, canAdd: false, canEdit: false, canDelete: false },
     Invoices: { canView: true, canAdd: true, canEdit: true, canDelete: true },
-    Files: { canView: true, canAdd: true, canEdit: true, canDelete: true },
+    Files: { canView: true, canAdd: true, canEdit: false, canDelete: true },
     JobPosts: { canView: true, canAdd: true, canEdit: true, canDelete: true },
-    JobApplications: { canView: true, canAdd: true, canEdit: true, canDelete: true },
-    UserManagement: { canView: true, canAdd: true, canEdit: true, canDelete: true }
+    JobApplications: { canView: true, canAdd: false, canEdit: true, canDelete: false },
+    UserManagement: { canView: true, canAdd: true, canEdit: true, canDelete: true },
+    Analytics: { canView: true }
   },
-  Supervisor: {
+  Operations: {
     Employees: { canView: true, canAdd: true, canEdit: true, canDelete: false },
-    Clients: { canView: true, canAdd: true, canEdit: true, canDelete: false },
+    Clients: { canView: true, canAdd: false, canEdit: false, canDelete: false },
     GuardDuty: { canView: true, canAdd: true, canEdit: true, canDelete: false },
     EscortDuty: { canView: true, canAdd: true, canEdit: true, canDelete: false },
-    DayLabor: { canView: true, canAdd: true, canEdit: true, canDelete: false },
-    LoanAdvance: { canView: true, canAdd: true, canEdit: true, canDelete: false },
-    Salary: { canView: true, canAdd: true, canEdit: false, canDelete: false },
-    Invoices: { canView: true, canAdd: true, canEdit: false, canDelete: false },
+    DayLabor: { canView: true, canAdd: true, canEdit: false, canDelete: false },
+    LoanAdvance: { canView: true, canAdd: true, canEdit: false, canDelete: false },
+    Salary: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    Invoices: { canView: true, canAdd: false, canEdit: false, canDelete: false },
     Files: { canView: true, canAdd: true, canEdit: false, canDelete: false },
     JobPosts: { canView: true, canAdd: true, canEdit: true, canDelete: false },
     JobApplications: { canView: true, canAdd: false, canEdit: true, canDelete: false },
-    UserManagement: { canView: false, canAdd: false, canEdit: false, canDelete: false }
+    UserManagement: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    Analytics: { canView: true }
   },
-  Viewer: {
+  Finance: {
+    Employees: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    Clients: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    GuardDuty: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    EscortDuty: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    DayLabor: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    LoanAdvance: { canView: true, canAdd: false, canEdit: false, canDelete: true },
+    Salary: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    Invoices: { canView: true, canAdd: true, canEdit: true, canDelete: true },
+    Files: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    JobPosts: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    JobApplications: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    UserManagement: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    Analytics: { canView: true }
+  },
+  Auditor: {
     Employees: { canView: true, canAdd: false, canEdit: false, canDelete: false },
     Clients: { canView: true, canAdd: false, canEdit: false, canDelete: false },
     GuardDuty: { canView: true, canAdd: false, canEdit: false, canDelete: false },
@@ -167,7 +182,23 @@ const BACKEND_PERMISSIONS = {
     Files: { canView: true, canAdd: false, canEdit: false, canDelete: false },
     JobPosts: { canView: true, canAdd: false, canEdit: false, canDelete: false },
     JobApplications: { canView: true, canAdd: false, canEdit: false, canDelete: false },
-    UserManagement: { canView: false, canAdd: false, canEdit: false, canDelete: false }
+    UserManagement: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    Analytics: { canView: true }
+  },
+  Viewer: {
+    Employees: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    Clients: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    GuardDuty: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    EscortDuty: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    DayLabor: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    LoanAdvance: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    Salary: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    Invoices: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    Files: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    JobPosts: { canView: true, canAdd: false, canEdit: false, canDelete: false },
+    JobApplications: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    UserManagement: { canView: false, canAdd: false, canEdit: false, canDelete: false },
+    Analytics: { canView: false }
   }
 };
 
@@ -209,10 +240,9 @@ const ACTION_PERMISSIONS = {
   deleteLoanAdvance:       { module: 'LoanAdvance', permission: 'canDelete' },
   // Salary
   getSalaryLedger:         { module: 'Salary', permission: 'canView' },
-  generateSalary:          { module: 'Salary', permission: 'canAdd' },
-  getEmployeePayrollSummary: { module: 'Salary', permission: 'canView' },
   // Invoices
   getInvoices:             { module: 'Invoices', permission: 'canView' },
+  getInvoiceDetails:       { module: 'Invoices', permission: 'canView' },
   generateInvoice:         { module: 'Invoices', permission: 'canAdd' },
   finalizeInvoice:         { module: 'Invoices', permission: 'canEdit' },
   markInvoicePaid:         { module: 'Invoices', permission: 'canEdit' },
@@ -239,7 +269,9 @@ const ACTION_PERMISSIONS = {
   // Auth
   logout:                  null,
   // Activity Logs
-  getActivityLogs:         { module: 'UserManagement', permission: 'canView' }
+  getActivityLogs:         { module: 'UserManagement', permission: 'canView' },
+  // Analytics
+  getMarginAnalytics:      { module: 'Analytics', permission: 'canView' }
 };
 
 // ============================================
@@ -655,19 +687,17 @@ function routeAction(action, payload, sessionUser) {
       return handleDeleteLoanAdvance(payload, sessionUser);
 
     // ── Salary Ledger ─────────────────────────────────
-    // CONTRACT: Salary/{canView,canAdd} — see AUTH_CONTRACT.md §3
+    // CONTRACT: Salary/canView — see AUTH_CONTRACT.md §3
     case 'getSalaryLedger':
       return handleGetSalaryLedger(payload, sessionUser);
-    case 'generateSalary':
-      return handleGenerateSalary(payload, sessionUser);
-    case 'getEmployeePayrollSummary':
-      return handleGetEmployeePayrollSummary(payload, sessionUser);
 
     // ── Invoices ──────────────────────────────────────
     // CONTRACT: Invoices/{canView,canAdd,canEdit,canDelete} — see AUTH_CONTRACT.md §3
     // NOTE: Backend module "Invoices"; frontend "Invoice". checkPermission() normalizes.
     case 'getInvoices':
       return handleGetInvoices(payload, sessionUser);
+    case 'getInvoiceDetails':
+      return handleGetInvoiceDetails(payload, sessionUser);
     case 'generateInvoice':
       return handleGenerateInvoice(payload, sessionUser);
     case 'finalizeInvoice':
@@ -731,6 +761,11 @@ function routeAction(action, payload, sessionUser) {
       return handleResetPassword(payload, sessionUser);
     case 'deleteUser':
       return handleDeleteUser(payload, sessionUser);
+
+    // ── Margin Analytics ──────────────────────────────
+    // CONTRACT: Analytics/canView — see AUTH_CONTRACT.md §3
+    case 'getMarginAnalytics':
+      return handleGetMarginAnalytics(payload, sessionUser);
 
     // ── Activity Logs ─────────────────────────────────
     case 'getActivityLogs':

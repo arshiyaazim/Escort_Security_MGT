@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Margin Analytics - Al-Aqsa Security Services</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ux-utils.js"></script>
+    <script src="js/pagination-utils.js"></script>
+    <script src="js/margin-dashboard.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800">Margin Analytics</h1>
+                    <p class="text-sm text-gray-500">Al-Aqsa Security Services • Profitability Dashboard</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="userInfo" class="text-sm text-gray-600"></span>
+                    <a href="dashboard.html" class="text-sm text-blue-600 hover:text-blue-800">&larr; Dashboard</a>
+                    <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Period Filter -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label for="periodStart" class="text-sm text-gray-600 font-medium">Period Start:</label>
+                    <input type="date" id="periodStart"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="periodEnd" class="text-sm text-gray-600 font-medium">Period End:</label>
+                    <input type="date" id="periodEnd"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="filterClientId" class="text-sm text-gray-600 font-medium">Client:</label>
+                    <input type="text" id="filterClientId" placeholder="All clients"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-40">
+                </div>
+                <button onclick="loadAnalytics()"
+                    class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-chart-line mr-1"></i> Analyze
+                </button>
+                <button onclick="resetPeriod()"
+                    class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors">
+                    Reset
+                </button>
+                <button id="btnExport" onclick="exportCSV()" style="display:none"
+                    class="ml-auto px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <i class="fas fa-file-csv mr-1"></i> Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div id="kpiSection" class="hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Summary</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-blue-500">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Total Revenue</div>
+                    <div id="kpiRevenue" class="text-2xl font-bold text-gray-800 mt-1">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-orange-500">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Total Cost</div>
+                    <div id="kpiCost" class="text-2xl font-bold text-gray-800 mt-1">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-green-500">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Total Margin</div>
+                    <div id="kpiMargin" class="text-2xl font-bold mt-1">-</div>
+                </div>
+                <div id="kpiMarginPctCard" class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-purple-500">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Margin %</div>
+                    <div id="kpiMarginPct" class="text-2xl font-bold text-purple-700 mt-1">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Profitability Table -->
+        <div id="clientSection" class="hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Client Profitability</h2>
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700"
+                                    onclick="sortClientTable('clientName')">Client <i class="fas fa-sort ml-1"></i></th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700"
+                                    onclick="sortClientTable('revenue')">Revenue <i class="fas fa-sort ml-1"></i></th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700"
+                                    onclick="sortClientTable('cost')">Cost <i class="fas fa-sort ml-1"></i></th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700"
+                                    onclick="sortClientTable('margin')">Margin <i class="fas fa-sort ml-1"></i></th>
+                                <th id="colMarginPct" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700"
+                                    onclick="sortClientTable('marginPercent')">Margin % <i class="fas fa-sort ml-1"></i></th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientTableBody" class="divide-y divide-gray-200">
+                            <!-- Rendered by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Duty-Type Breakdown -->
+        <div id="dutyTypeSection" class="hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Duty-Type Breakdown</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="dutyTypeCards">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+
+        <!-- Invoice Detail Table -->
+        <div id="invoiceSection" class="hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Invoice Detail</h2>
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Period</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Cost</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Margin</th>
+                                <th id="colInvMarginPct" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Margin %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceTableBody" class="divide-y divide-gray-200">
+                            <!-- Rendered by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="invoicePagination" class="px-4 py-3 border-t border-gray-200"></div>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="emptyState" class="text-center py-16">
+            <i class="fas fa-chart-pie text-gray-300 text-5xl mb-4"></i>
+            <p class="text-gray-500">Select a period and click <strong>Analyze</strong> to view margin analytics.</p>
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const authed = await requireAuth();
+            if (!authed) return;
+            renderUserInfo('userInfo');
+            initMarginDashboard();
+        });
+    </script>
+</body>
+</html>

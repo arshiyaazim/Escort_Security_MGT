@@ -276,31 +276,8 @@
             <div id="employeesPagination" class="mt-4"></div>
         </div>
 
-        <!-- Payroll Summary Section -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">Employee Payroll Summary</h2>
-            <div class="flex flex-wrap items-end gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
-                    <input type="hidden" id="payrollEmployeeId">
-                    <input 
-                        type="text" 
-                        id="payrollEmployeeName"
-                        autocomplete="off"
-                        class="w-64 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Type to search employees..."
-                    >
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
-                    <input type="month" id="payrollMonth" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <button onclick="loadPayrollSummary()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-                    Load Summary
-                </button>
-            </div>
-            <div id="payrollSummaryResult" class="text-sm text-gray-500">Select an employee and month, then click Load Summary.</div>
-        </div>
+        <!-- Payroll Summary — REMOVED (Phase 0 cleanup) -->
+        <!-- Will be rebuilt in Phase 1 with unified salary engine -->
 
     </main>
 

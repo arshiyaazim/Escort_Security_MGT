@@ -68,13 +68,13 @@ function handleAddUser(payload, sessionUser) {
     }
     
     // Validate role
-    const validRoles = ['Admin', 'Supervisor', 'Viewer'];
+    const validRoles = ['Admin', 'Operations', 'Finance', 'Auditor', 'Viewer'];
     if (!validRoles.includes(payload.role)) {
       return {
         success: false,
         action: 'addUser',
         data: null,
-        message: 'Invalid role. Must be Admin, Supervisor, or Viewer'
+        message: 'Invalid role. Must be Admin, Operations, Finance, Auditor, or Viewer'
       };
     }
     
@@ -131,14 +131,15 @@ function handleUpdateUser(payload, sessionUser) {
     const user = { ...foundUser };
     
     // Update allowed fields
+    var oldRole = user.role;
     if (payload.role !== undefined) {
-      const validRoles = ['Admin', 'Supervisor', 'Viewer'];
+      const validRoles = ['Admin', 'Operations', 'Finance', 'Auditor', 'Viewer'];
       if (!validRoles.includes(payload.role)) {
         return {
           success: false,
           action: 'updateUser',
           data: null,
-          message: 'Invalid role. Must be Admin, Supervisor, or Viewer'
+          message: 'Invalid role. Must be Admin, Operations, Finance, Auditor, or Viewer'
         };
       }
       user.role = payload.role;
@@ -158,6 +159,12 @@ function handleUpdateUser(payload, sessionUser) {
     }
     
     updateRecord(SHEETS.USERS, payload.id, user);
+
+    // Audit trail for user changes
+    var changes = [];
+    if (payload.role !== undefined && payload.role !== oldRole) changes.push('role ' + oldRole + ' → ' + payload.role);
+    if (payload.status !== undefined) changes.push('status → ' + payload.status);
+    logActivity({ sessionUser: sessionUser, action: 'updateUser', module: 'UserManagement', recordId: payload.id, summary: 'Updated user ' + user.username + (changes.length ? ': ' + changes.join(', ') : ''), success: true });
     
     // Return user without password
     const { passwordHash, ...safeUpdatedUser } = user;

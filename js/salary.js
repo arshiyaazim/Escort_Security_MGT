@@ -33,27 +33,6 @@ function getCurrentMonth() {
 }
 
 /**
- * Get number of days in a month
- * @param {string} monthStr - Month in YYYY-MM format
- * @returns {number} Number of days
- */
-function getDaysInMonth(monthStr) {
-    const [year, month] = monthStr.split('-').map(Number);
-    return new Date(year, month, 0).getDate();
-}
-
-/**
- * Calculate daily rate from monthly salary
- * @param {number} monthlySalary - Monthly salary amount
- * @param {string} month - Month in YYYY-MM format
- * @returns {number} Daily rate
- */
-function calculateDailyRate(monthlySalary, month) {
-    const daysInMonth = getDaysInMonth(month);
-    return monthlySalary / daysInMonth;
-}
-
-/**
  * Get month from date string
  * @param {string} dateStr - Date in YYYY-MM-DD format
  * @returns {string} Month in YYYY-MM format
@@ -307,97 +286,11 @@ function resetFilters() {
 }
 
 // ============================================
-// SALARY GENERATION (DETERMINISTIC)
+// REMOVED: generateSalary(), calculateEscortEarnings(),
+// calculateGuardEarnings(), calculateDayLaborEarnings()
+// Phase 0 cleanup — conflicting engines removed.
+// Will be rebuilt in Phase 1 with unified rate logic.
 // ============================================
-
-/**
- * Generate salary entries from duty/labor events
- * This would normally run at 6 AM and 6 PM via backend
- * For demo purposes, triggered manually
- */
-async function generateSalary() {
-    // Get the generate button for loading state
-    const generateBtn = document.querySelector('[onclick="generateSalary()"]');
-    const restoreBtn = typeof setButtonLoading === 'function' && generateBtn
-        ? setButtonLoading(generateBtn, 'Generating...')
-        : () => {};
-    
-    try {
-        const response = await request("generateSalary", {
-            runTime: new Date().toISOString()
-        });
-        
-        if (response.success) {
-            console.log("Salary generation completed:", response.message);
-            // Refresh the ledger to show new entries
-            await refreshSalaryLedger(currentFilter.employeeId, currentFilter.month);
-            if (typeof showToast === 'function') {
-                showToast('Salary generated successfully', 'success');
-            }
-        } else {
-            if (typeof showToast === 'function') {
-                showToast(response.message || 'Failed to generate salary', 'error');
-            }
-        }
-    } catch (error) {
-        console.error("Error generating salary:", error);
-        if (typeof showToast === 'function') {
-            showToast('Error generating salary', 'error');
-        }
-    } finally {
-        restoreBtn();
-    }
-}
-
-// ============================================
-// SALARY CALCULATION HELPERS (for reference)
-// ============================================
-
-/**
- * Calculate escort duty earnings
- * @param {Object} escortRecord - Escort duty record
- * @param {number} dailyRate - Daily rate
- * @returns {number} Earned amount
- */
-function calculateEscortEarnings(escortRecord, dailyRate) {
-    // 2 shifts = 1 day, so totalDays already represents this
-    const earned = dailyRate * escortRecord.totalDays;
-    const conveyance = Number(escortRecord.conveyance) || 0;
-    return earned + conveyance;
-}
-
-/**
- * Calculate guard duty earnings
- * @param {Object} guardRecord - Guard duty record
- * @param {number} dailyRate - Daily rate
- * @returns {number} Earned amount
- */
-function calculateGuardEarnings(guardRecord, dailyRate) {
-    // 1 shift = 1 day, only if Present
-    if (guardRecord.status !== 'Present') {
-        return 0;
-    }
-    return dailyRate;
-}
-
-/**
- * Calculate day labor earnings
- * @param {Object} laborRecord - Day labor record
- * @param {number} dailyRate - Daily rate
- * @param {number} otRate - Overtime rate per hour
- * @returns {number} Earned amount
- */
-function calculateDayLaborEarnings(laborRecord, dailyRate, otRate = 0) {
-    // 9 hours = 1 day
-    const hours = Number(laborRecord.hoursWorked) || 0;
-    const regularDays = Math.min(hours, 9) / 9;
-    const overtimeHours = Math.max(0, hours - 9);
-    
-    const regularEarnings = dailyRate * regularDays;
-    const overtimeEarnings = overtimeHours * otRate;
-    
-    return regularEarnings + overtimeEarnings;
-}
 
 // ============================================
 // INITIALIZATION
