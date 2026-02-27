@@ -231,6 +231,7 @@ const ACTION_PERMISSIONS = {
   deleteDayLabor:          { module: 'DayLabor', permission: 'canDelete' },
   // Escort Duty
   getEscortDuty:           { module: 'EscortDuty', permission: 'canView' },
+  getEscortDutyFiltered:   { module: 'EscortDuty', permission: 'canView' },
   addEscortDuty:           { module: 'EscortDuty', permission: 'canAdd' },
   updateEscortDuty:        { module: 'EscortDuty', permission: 'canEdit' },
   deleteEscortDuty:        { module: 'EscortDuty', permission: 'canDelete' },
@@ -670,6 +671,8 @@ function routeAction(action, payload, sessionUser) {
     // CONTRACT: EscortDuty/{canView,canAdd,canDelete} — see AUTH_CONTRACT.md §3
     case 'getEscortDuty':
       return handleGetEscortDuty(payload, sessionUser);
+    case 'getEscortDutyFiltered':
+      return handleGetEscortDutyFiltered(payload, sessionUser);
     case 'addEscortDuty':
       return handleAddEscortDuty(payload, sessionUser);
     case 'updateEscortDuty':

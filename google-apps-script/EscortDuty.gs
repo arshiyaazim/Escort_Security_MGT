@@ -45,6 +45,46 @@ function handleGetEscortDuty(payload, sessionUser) {
 }
 
 /**
+ * Get escort duty records filtered by employeeId and/or clientId.
+ * Returns ALL matching records (no date range constraint).
+ * Used by the dual search UI on the escort-duty page.
+ */
+function handleGetEscortDutyFiltered(payload, sessionUser) {
+  if (!checkPermission(sessionUser.role, 'EscortDuty', 'canView')) {
+    return unauthorizedResponse('getEscortDutyFiltered');
+  }
+
+  try {
+    var records = getSheetData(SHEETS.ESCORT_DUTY);
+
+    var filterEmployeeId = String(payload.employeeId || '').trim();
+    var filterClientId = String(payload.clientId || '').trim();
+
+    if (filterEmployeeId) {
+      records = records.filter(function(r) {
+        return String(r.employeeId || '').trim() === filterEmployeeId;
+      });
+    }
+
+    if (filterClientId) {
+      records = records.filter(function(r) {
+        return String(r.clientId || '').trim() === filterClientId;
+      });
+    }
+
+    records = records.map(function(r) {
+      r.startDate = normalizeDateValue(r.startDate);
+      r.endDate = normalizeDateValue(r.endDate);
+      return r;
+    });
+
+    return { success: true, action: 'getEscortDutyFiltered', data: records, message: 'Filtered escort duty records retrieved' };
+  } catch (error) {
+    return sanitizedError('getEscortDutyFiltered', error);
+  }
+}
+
+/**
  * Add escort duty record
  *
  * Phase 1 changes:
